@@ -9,11 +9,16 @@ def get_cascade():
     import os
     local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'haarcascade_frontalface_default.xml')
     if os.path.exists(local_path):
-        cascade_path = local_path
+        cascade_path = str(local_path)
     else:
-        cascade_path = getattr(cv2.data, 'haarcascades', '') + 'haarcascade_frontalface_default.xml'
+        cascade_path = str(getattr(cv2.data, 'haarcascades', '') + 'haarcascade_frontalface_default.xml')
     
-    face_cascade = cv2.CascadeClassifier(cascade_path)
+    face_cascade = cv2.CascadeClassifier()
+    if not face_cascade.load(cascade_path):
+        try:
+            face_cascade = cv2.CascadeClassifier(cascade_path)
+        except Exception:
+            pass
     return face_cascade
 
 def extract_faces(image_input, max_faces=5, padding=0.2):
