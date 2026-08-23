@@ -5,7 +5,7 @@ import functools
 
 @functools.lru_cache(maxsize=1)
 def get_cascade():
-    """Loads OpenCV frontal face Haar Cascade (cached in memory)."""
+    """Loads OpenCV frontal face Haar Cascade safely."""
     import os
     local_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'haarcascade_frontalface_default.xml')
     if os.path.exists(local_path):
@@ -13,13 +13,18 @@ def get_cascade():
     else:
         cascade_path = str(getattr(cv2.data, 'haarcascades', '') + 'haarcascade_frontalface_default.xml')
     
-    face_cascade = cv2.CascadeClassifier()
-    if not face_cascade.load(cascade_path):
-        try:
-            face_cascade = cv2.CascadeClassifier(cascade_path)
-        except Exception:
-            pass
-    return face_cascade
+    try:
+        if hasattr(cv2, 'CascadeClassifier'):
+            face_cascade = cv2.CascadeClassifier()
+            if not face_cascade.load(cascade_path):
+                try:
+                    face_cascade = cv2.CascadeClassifier(cascade_path)
+                except Exception:
+                    pass
+            return face_cascade
+    except Exception:
+        pass
+    return None
 
 def extract_faces(image_input, max_faces=5, padding=0.2):
     """
@@ -36,16 +41,22 @@ def extract_faces(image_input, max_faces=5, padding=0.2):
     else:
         img_bgr = image_input
 
-    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     cascade = get_cascade()
+    if cascade is None or getattr(cascade, 'empty', lambda: True)():
+        return []
+
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     
     # Detect faces
-    faces = cascade.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5,
-        minSize=(30, 30)
-    )
+    try:
+        faces = cascade.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30)
+        )
+    except Exception:
+        return []
 
     results = []
     h_img, w_img = img_bgr.shape[:2]
