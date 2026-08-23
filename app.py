@@ -121,19 +121,22 @@ with tab1:
 
                     progress_bar.progress(1.0, text="Analysis Complete! (100%)")
 
-                    is_fake = results['is_deepfake']
-                    confidence = results['confidence'] * 100
-
-                    st.divider()
-                    if is_fake:
-                        st.error(f"🚨 **Overall Video Prediction: DEEPFAKE** (Confidence: {confidence:.2f}%)")
+                    if results.get('error'):
+                        st.warning("⚠️ Unable to decode video file stream. Please ensure the file is a valid video in standard MP4 format.")
                     else:
-                        st.success(f"✅ **Overall Video Prediction: REAL** (Confidence: {confidence:.2f}%)")
+                        is_fake = results['is_deepfake']
+                        confidence = results['confidence'] * 100
 
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Avg Fake Probability", f"{results['avg_fake_prob']*100:.2f}%")
-                    col2.metric("Max Fake Probability", f"{results['max_fake_prob']*100:.2f}%")
-                    col3.metric("Fake Frame Ratio", f"{results['fake_frame_ratio']*100:.1f}%")
+                        st.divider()
+                        if is_fake:
+                            st.error(f"🚨 **Overall Video Prediction: DEEPFAKE** (Confidence: {confidence:.2f}%)")
+                        else:
+                            st.success(f"✅ **Overall Video Prediction: REAL** (Confidence: {confidence:.2f}%)")
+
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric("Avg Fake Probability", f"{results['avg_fake_prob']*100:.2f}%")
+                        col2.metric("Max Fake Probability", f"{results['max_fake_prob']*100:.2f}%")
+                        col3.metric("Fake Frame Ratio", f"{results['fake_frame_ratio']*100:.1f}%")
                 finally:
                     if video_path and os.path.exists(video_path):
                         try:
@@ -298,19 +301,22 @@ with tab2:
 
                             progress_bar.progress(1.0, text="Analysis Complete! (100%)")
 
-                            is_fake = results['is_deepfake']
-                            confidence = results['confidence'] * 100
-
-                            st.divider()
-                            if is_fake:
-                                st.error(f"🚨 **Overall Video Prediction: DEEPFAKE** (Confidence: {confidence:.2f}%)")
+                            if results.get('error'):
+                                st.warning("⚠️ Unable to decode video stream from URL. Please try downloading the video file directly and uploading it.")
                             else:
-                                st.success(f"✅ **Overall Video Prediction: REAL** (Confidence: {confidence:.2f}%)")
+                                is_fake = results['is_deepfake']
+                                confidence = results['confidence'] * 100
 
-                            col1, col2, col3 = st.columns(3)
-                            col1.metric("Avg Fake Probability", f"{results['avg_fake_prob']*100:.2f}%")
-                            col2.metric("Max Fake Probability", f"{results['max_fake_prob']*100:.2f}%")
-                            col3.metric("Fake Frame Ratio", f"{results['fake_frame_ratio']*100:.1f}%")
+                                st.divider()
+                                if is_fake:
+                                    st.error(f"🚨 **Overall Video Prediction: DEEPFAKE** (Confidence: {confidence:.2f}%)")
+                                else:
+                                    st.success(f"✅ **Overall Video Prediction: REAL** (Confidence: {confidence:.2f}%)")
+
+                                col1, col2, col3 = st.columns(3)
+                                col1.metric("Avg Fake Probability", f"{results['avg_fake_prob']*100:.2f}%")
+                                col2.metric("Max Fake Probability", f"{results['max_fake_prob']*100:.2f}%")
+                                col3.metric("Fake Frame Ratio", f"{results['fake_frame_ratio']*100:.1f}%")
                         finally:
                             if temp_dir_to_clean and os.path.exists(temp_dir_to_clean):
                                 try:

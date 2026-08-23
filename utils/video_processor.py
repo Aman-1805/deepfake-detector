@@ -8,9 +8,23 @@ def process_video(video_path, model, device, sample_rate=10, max_frames=60, prog
     Processes video file frame by frame, runs deepfake detection on extracted faces,
     and calculates aggregated statistics across the video timeline.
     """
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        raise ValueError(f"Unable to open video file: {video_path}")
+    try:
+        cap = cv2.VideoCapture(str(video_path))
+    except Exception:
+        cap = None
+
+    if cap is None or not cap.isOpened():
+        return {
+            'overall_label': 'Error Reading Video',
+            'is_deepfake': False,
+            'confidence': 0.0,
+            'avg_fake_prob': 0.0,
+            'max_fake_prob': 0.0,
+            'fake_frame_ratio': 0.0,
+            'total_evaluated': 0,
+            'frame_results': [],
+            'error': True
+        }
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
