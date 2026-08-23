@@ -1,0 +1,5 @@
+legacy_backup/
+__pycache__/
+*.pyc
+.tmp*
+.vscode/
