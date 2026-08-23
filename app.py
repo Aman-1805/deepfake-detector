@@ -56,8 +56,8 @@ with st.spinner("Loading Neural Network..."):
 # Input Options (Tabs for File Upload vs URL Input)
 tab1, tab2 = st.tabs(["📁 Upload File", "🌐 Any Social Media / Web Link"])
 
-image_exts = ['.jpg', '.jpeg', '.png', '.webp', '.tiff']
-video_exts = ['.mp4', '.avi', '.mov', '.webm', '.mkv']
+image_exts = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.bmp', '.jfif', '.heic', '.avif']
+video_exts = ['.mp4', '.avi', '.mov', '.webm', '.mkv', '.m4v']
 
 # TAB 1: File Upload
 with tab1:
@@ -225,7 +225,14 @@ with tab2:
                                     video_path = ydl.prepare_filename(info)
 
                                 if video_path and os.path.exists(video_path):
-                                    download_success = True
+                                    try:
+                                        img_check = Image.open(video_path)
+                                        img_check.verify()
+                                        image_from_link = Image.open(video_path).convert('RGB')
+                                        video_path = None
+                                        download_success = True
+                                    except Exception:
+                                        download_success = True
                         except Exception:
                             pass
 
@@ -240,21 +247,20 @@ with tab2:
                                 media_bytes = resp.read()
                                 c_type = resp.headers.get('Content-Type', '').lower()
 
-                            if 'image' in c_type:
-                                try:
-                                    image_from_link = Image.open(io.BytesIO(media_bytes)).convert('RGB')
-                                    download_success = True
-                                except Exception:
-                                    pass
-                            elif 'video' in c_type:
-                                try:
-                                    tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
-                                    tfile.write(media_bytes)
-                                    tfile.close()
-                                    video_path = tfile.name
-                                    download_success = True
-                                except Exception:
-                                    pass
+                            # Try decoding as image first
+                            try:
+                                image_from_link = Image.open(io.BytesIO(media_bytes)).convert('RGB')
+                                download_success = True
+                            except Exception:
+                                if 'video' in c_type or any(clean_url.lower().endswith(v) for v in video_exts):
+                                    try:
+                                        tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
+                                        tfile.write(media_bytes)
+                                        tfile.close()
+                                        video_path = tfile.name
+                                        download_success = True
+                                    except Exception:
+                                        pass
                         except Exception:
                             pass
 
